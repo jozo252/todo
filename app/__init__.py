@@ -3,6 +3,7 @@ from flask import Flask
 from .extensions import db, login_manager, migrate
 from .auth import auth_bp
 from .main import main_bp
+from .routes import todo_bp
 
 def create_app():
     app = Flask(__name__)
@@ -17,5 +18,6 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(todo_bp)
 
     return app

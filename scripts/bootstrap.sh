@@ -1,5 +1,5 @@
 #!/usr/bin/env bash      initialize the installation !!!!!!!!!!
-set -e
+#set -e
 python -m venv .venv
 . .venv/bin/activate
 pip install -r requirements-dev.txt

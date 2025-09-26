@@ -11,3 +11,4 @@ def index_public():
 @login_required
 def index():
     return render_template("index.html", user=current_user)
+
