@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+  {% if user %}
+    <h1>Welcome, {{ user.email }}!</h1>
+    <p>This is a protected dashboard.</p>
+  {% else %}
+    <h1>Hello</h1>
+    <p>This is a public landing page. <a href="{{ url_for('auth.login') }}">Login</a> to see the dashboard.</p>
+  {% endif %}
+{% endblock %}

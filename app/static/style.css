@@ -1,0 +1,8 @@
+body { font-family: system-ui, Arial, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+nav a { margin-right: 1rem; }
+.flash { list-style: none; padding: 0; }
+.flash li { padding: .5rem .75rem; margin: .5rem 0; border-radius: 6px; }
+.flash .success { background: #e6ffed; }
+.flash .warning { background: #fff7e6; }
+.flash .danger { background: #ffe6e6; }
+.flash .info { background: #e6f0ff; }
