@@ -9,31 +9,43 @@
 
         <!-- Task List -->
         <ul class="space-y-4 mb-6">
+              <li class="flex font-bold text-gray-700 bg-gray-100 p-3 rounded-t-lg">
+                <span class="flex-grow">Task</span>
+                <span class="w-32 text-right">Actions</span>
+                <span class="w-32 text-right">Created at</span>
+                
+
+            </li>
             {% for task in tasks %}
-            <li class="flex items-center justify-between bg-white p-4 rounded-lg shadow">
-                <span class="flex-grow {{ 'line-through text-gray-400' if task.completed else '' }}">{{ task.description }}</span>
-                <div class="flex space-x-2">
+            <li class="flex items-center justify-between bg-white p-4 rounded-lg shadow ">
+                <span class="flex-grow {{ 'line-through text-gray-800 ' if task.completed else 'text-black' }}">
+                    {{ task.description }}
+                </span>
+                <div class="flex space-x-3">
                     {% if not task.completed %}
-                    <form method="POST" action="">
+                    <form method="POST" action="{{url_for('todo_bp.complete_task', task_id=task.id)}}">
                         <button type="submit"
                             class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-all duration-200">Complete</button>
                     </form>
                     {% endif %}
-                    <form method="POST" action="">
+                    <form method="POST" action="{{url_for('todo_bp.delete_task', task_id=task.id)}}">
                         <button type="submit"
                             class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-all duration-200">Delete</button>
+
+                        
                     </form>
+                    <p class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-all duration-200">{{ task.created_at.strftime('%H:%M %d.%m.%Y' ) }}</p>
                 </div>
             </li>
             {% endfor %}
-        <!-- To-Do Form -->
-        <form method="POST" action="{{url_for('todo_bp.add_task')}}" class="mb-6">
-            <div class="flex">
-                <input type="text" name="task" placeholder="Add a new task..." required
-                    class="flex-grow px-4 py-2 rounded-l-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent">
-                <button type="submit"
-                    class="px-4 py-2 bg-accent-500 text-white rounded-r-md hover:bg-accent-600 transition-all duration-200">Add</button>
-            </div>
-        </form>
+            <!-- To-Do Form -->
+            <form method="POST" action="{{url_for('todo_bp.add_task')}}" class="mb-6">
+                <div class="flex">
+                    <input type="text" name="task" placeholder="Add a new task..." required
+                        class="flex-grow px-4 py-2 rounded-l-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent">
+                    <button type="submit"
+                        class="px-4 py-2 bg-accent-500 text-white rounded-r-md hover:bg-accent-600 transition-all duration-200">Add</button>
+                </div>
+            </form>
 
-{% endblock %}
+            {% endblock %}
