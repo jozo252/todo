@@ -18,7 +18,8 @@ def add_project():
     if request.method == "POST":
         name = request.form.get("name")
         description = request.form.get("description")
-        start_date = datetime.strptime(request.form.get("start_date"), "%Y-%m-%d")
+        start_date_str= request.form.get("start_date")
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d") if start_date_str else datetime.utcnow()
         end_date_str = request.form.get("end_date")
         end_date = datetime.strptime(end_date_str, "%Y-%m-%d") if end_date_str else None
 
@@ -57,7 +58,7 @@ def add_task(project_id):
         title = request.form.get("title")
         description = request.form.get("description")
         due_date = request.form.get("due_date")
-        if title and description:
+        if description:
             new_task = Task(
                 description=description,
                 user_id=current_user.id,
@@ -104,3 +105,14 @@ def delete_task(task_id):
     flash("Task deleted!", "success")
     return redirect(url_for("project_bp.view_project", project_id=project_id))
 
+@project_bp.route("/delete_project/<int:project_id>", methods=["POST"])
+@login_required
+def delete_project(project_id):
+    project= Project.query.get_or_404(project_id)
+    if project.user_id != current_user.id:
+        return "Unauthorized", 403
+    
+    db.session.delete(project)
+    db.session.commit()
+    flash("Project deleted!", "success")
+    return redirect(url_for("project_bp.projects"))

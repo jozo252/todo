@@ -1,10 +1,186 @@
 {% extends "base.html" %}
+{% block title %}Dashboard · GallaX TODO{% endblock %}
+
 {% block content %}
-  {% if user %}
-    <h1>Welcome, {{ user.email }}!</h1>
-    <p>This is a protected dashboard.</p>
+  {# --- Flash messages (success / error) --- #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="space-y-2 mb-6">
+        {% for category, message in messages %}
+          <div class="px-4 py-3 rounded-md text-sm
+                      {% if category == 'success' %} bg-green-900/40 text-green-200 border border-green-700/40
+                      {% elif category == 'warning' %} bg-yellow-900/40 text-yellow-200 border border-yellow-700/40
+                      {% elif category == 'error' or category == 'danger' %} bg-red-900/40 text-red-200 border border-red-700/40
+                      {% else %} bg-gray-800 text-gray-200 border border-gray-700 {% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {# --- First‑time empty state --- #}
+  {% if not projects or projects|length == 0 %}
+    <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 shadow-xl">
+      <div class="p-8 md:p-12">
+        <div class="flex items-start md:items-center gap-4 md:gap-6">
+          <div class="shrink-0">
+            <i data-feather="flag" class="w-10 h-10 text-accent-500"></i>
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">Welcome, {{ user.username if user else 'there' }}.</h1>
+            <p class="mt-2 text-gray-300 max-w-2xl">You have no projects yet. Start by creating your first project to organize tasks and deadlines. Keep it lean: one clear goal, a due date, and 3–5 tasks. No fluff.</p>
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+              <button id="open-new-project" class="inline-flex items-center justify-center px-4 py-2 rounded-md bg-accent-500 hover:bg-accent-600 transition focus:outline-none focus:ring-2 focus:ring-accent-500/50">
+                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                Create first project
+              </button>
+              <a href="/projects" class="inline-flex items-center justify-center px-4 py-2 rounded-md bg-gray-800 border border-gray-700 hover:bg-gray-700">
+                <i data-feather="list" class="w-4 h-4 mr-2"></i>
+                Go to Projects
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {# Quick guidance (concise, ROI‑focused) #}
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="rounded-xl border border-gray-700 bg-gray-800 p-4">
+            <div class="flex items-center gap-2 text-gray-200">
+              <i data-feather="target" class="w-4 h-4"></i>
+              <h3 class="font-medium">Define the outcome</h3>
+            </div>
+            <p class="mt-2 text-sm text-gray-400">One sentence. If it doesn’t help money, time, or reputation, park it.</p>
+          </div>
+          <div class="rounded-xl border border-gray-700 bg-gray-800 p-4">
+            <div class="flex items-center gap-2 text-gray-200">
+              <i data-feather="check-circle" class="w-4 h-4"></i>
+              <h3 class="font-medium">List 3–5 tasks</h3>
+            </div>
+            <p class="mt-2 text-sm text-gray-400">Only what moves the needle. Everything else is a distraction.</p>
+          </div>
+          <div class="rounded-xl border border-gray-700 bg-gray-800 p-4">
+            <div class="flex items-center gap-2 text-gray-200">
+              <i data-feather="clock" class="w-4 h-4"></i>
+              <h3 class="font-medium">Commit a deadline</h3>
+            </div>
+            <p class="mt-2 text-sm text-gray-400">Tight beats loose. Parkinson’s law is real.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# Modal: New Project (lightweight, no external JS) #}
+    <div id="new-project-modal" class="hidden fixed inset-0 z-50">
+      <div class="absolute inset-0 bg-black/60" data-close-modal></div>
+      <div class="relative mx-auto mt-24 w-full max-w-lg p-6">
+        <div class="rounded-2xl border border-gray-700 bg-gray-900 shadow-2xl">
+          <div class="flex items-center justify-between p-4 border-b border-gray-800">
+            <div class="flex items-center gap-2">
+              <i data-feather="folder-plus" class="w-5 h-5 text-accent-500"></i>
+              <h2 class="text-lg font-semibold">Create Project</h2>
+            </div>
+            <button class="p-1 rounded hover:bg-gray-800" data-close-modal aria-label="Close">
+              <i data-feather="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <form action="{{ url_for('project_bp.add_project') }}" method="POST" class="p-6 space-y-4">
+            <div>
+              <label for="name" class="block text-sm text-gray-300 mb-1">Project name</label>
+              <input id="name" name="name" type="text" required
+                     class="w-full rounded-md bg-gray-800 border border-gray-700 focus:border-accent-500 focus:ring-0 px-3 py-2" placeholder="e.g., CNC plasma cutter MVP" />
+            </div>
+            <div>
+              <label for="description" class="block text-sm text-gray-300 mb-1">Description</label>
+              <textarea id="description" name="description" rows="3"
+                        class="w-full rounded-md bg-gray-800 border border-gray-700 focus:border-accent-500 focus:ring-0 px-3 py-2" placeholder="Outcome in one sentence."></textarea>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="end_date" class="block text-sm text-gray-300 mb-1">End date</label>
+                <input id="end_date" name="end_date" type="date"
+                       class="w-full rounded-md bg-gray-800 border border-gray-700 focus:border-accent-500 focus:ring-0 px-3 py-2" />
+              </div>
+              <div>
+                <label for="priority" class="block text-sm text-gray-300 mb-1">Priority</label>
+                <select id="priority" name="priority" class="w-full rounded-md bg-gray-800 border border-gray-700 focus:border-accent-500 focus:ring-0 px-3 py-2">
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+              <button type="button" class="px-3 py-2 rounded-md border border-gray-700 hover:bg-gray-800" data-close-modal>Cancel</button>
+              <button type="submit" class="px-4 py-2 rounded-md bg-accent-500 hover:bg-accent-600">Create</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {# Keyboard hints / power‑user tips #}
+    <section class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="rounded-xl border border-gray-700 bg-gray-900 p-4">
+        <div class="flex items-center gap-2 text-gray-200">
+          <i data-feather="zap" class="w-4 h-4"></i>
+          <h3 class="font-medium">Power tip</h3>
+        </div>
+        <p class="mt-2 text-sm text-gray-400">Keep one active project only. Everything else waits. Multi‑tracking kills throughput.</p>
+      </div>
+      <div class="rounded-xl border border-gray-700 bg-gray-900 p-4">
+        <div class="flex items-center gap-2 text-gray-200">
+          <i data-feather="git-commit" class="w-4 h-4"></i>
+          <h3 class="font-medium">Definition of done</h3>
+        </div>
+        <p class="mt-2 text-sm text-gray-400">Make it observable: demo, invoice sent, or customer reply. Not “90% done”.</p>
+      </div>
+      <div class="rounded-xl border border-gray-700 bg-gray-900 p-4">
+        <div class="flex items-center gap-2 text-gray-200">
+          <i data-feather="slash" class="w-4 h-4"></i>
+          <h3 class="font-medium">Cut the waste</h3>
+        </div>
+        <p class="mt-2 text-sm text-gray-400">If a task is unclear after 60s, rewrite it or delete it.</p>
+      </div>
+    </section>
+
+    <script>
+      (function(){
+        const openBtn = document.getElementById('open-new-project');
+        const modal = document.getElementById('new-project-modal');
+        const closers = modal ? modal.querySelectorAll('[data-close-modal]') : [];
+        if (openBtn && modal) {
+          openBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            if (window.feather) feather.replace();
+          });
+        }
+        closers.forEach(btn => btn.addEventListener('click', () => modal.classList.add('hidden')));
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+        });
+      })();
+    </script>
+
   {% else %}
-    <h1>Hello</h1>
-    <p>This is a public landing page. <a href="{{ url_for('auth.login') }}">Login</a> to see the dashboard.</p>
+    {# If somehow the user hits this page but already has projects, show a compact dashboard #}
+    <section class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold">Dashboard</h1>
+      <a href="/add_project" class="inline-flex items-center px-3 py-2 rounded-md bg-accent-500 hover:bg-accent-600">
+        <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+        New project
+      </a>
+    </section>
+    <section class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for p in projects[:6] %}
+        <a href="/projects/{{ p.id }}" class="block rounded-xl border border-gray-700 bg-gray-900 p-5 hover:bg-gray-800 transition">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold truncate">{{ p.name }}</h3>
+            <span class="text-xs text-gray-400">{{ (p.due_date.strftime('%Y-%m-%d') if p.due_date else 'No due') }}</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-400 line-clamp-2">{{ p.description or '—' }}</p>
+        </a>
+      {% endfor %}
+    </section>
   {% endif %}
 {% endblock %}

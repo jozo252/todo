@@ -27,8 +27,9 @@
         <div>
           <label for="description" class="block text-sm font-medium mb-1">Description</label>
           <textarea id="description" name="description" rows="3"
-                    class="w-full p-2 rounded-md bg-secondary text-white border border-gray-600"
-                    required></textarea>
+          class="w-full p-2 rounded-md bg-gray-800 text-gray-100 border border-gray-600"
+          required></textarea>
+
         </div>
 
         <button type="submit"
@@ -48,17 +49,19 @@
       {% if project.tasks %}
         <ul class="space-y-3">
           {% for task in project.tasks %}
-            <li class="bg-secondary p-4 rounded-lg shadow-md">
-              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-
-                <div class="min-w-0">
-                  <p class="text-lg {{ 'line-through text-gray-400' if task.completed else 'text-white' }}">
-                    {{ task.description }}
-                  </p>
-                  <p class="text-sm text-gray-400 mt-1">
-                    {{ 'Created: ' ~ (task.created_at.strftime('%Y-%m-%d') if task.created_at else '') }}
-                  </p>
-                </div>
+  <li class="bg-secondary p-4 rounded-lg shadow-md">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 min-w-0">
+      <div class="min-w-0 break-words">
+        <p class="text-lg {{ 'line-through text-gray-400' if task.completed else 'text-white' }}">
+          {{ task.description }}
+        </p>
+        <p class="text-sm text-gray-400 mt-1">
+          {{ 'Created: ' ~ (task.created_at.strftime('%d.%m.%Y') if task.created_at else '') }}
+          {% if task.completed_at %}
+          {{ 'Completed at: ' ~ (task.completed_at.strftime('%d.%m.%Y') if task.completed_at else '') }}
+          {% endif %}
+        </p>
+      </div>
 
                 <div class="flex items-center gap-2 md:shrink-0">
                   <form action="{{ url_for('project_bp.toggle_task', task_id=task.id) }}" method="post">
